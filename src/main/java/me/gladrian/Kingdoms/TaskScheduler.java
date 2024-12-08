@@ -6,6 +6,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitScheduler;
 
 import javax.annotation.Nullable;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.UUID;
 
@@ -29,12 +30,15 @@ public class TaskScheduler {
 
         scheduler.runTaskTimer(plugin, this::displayTitleForKingdomEnterOrExit,
                 200L, 20L);
+
+        scheduler.runTaskTimer(plugin, this::backupPluginData,
+                200L, 20L * 60L * 60L * _config.BackupFrequencyHours);
     }
 
     private void incrementMoneyOfKingdoms() {
         for (var kingdom : _cache.Kingdoms) {
             int numMembersOnline = kingdom.getOnlineMembers().size();
-            float hoursSinceLastIncrement = _moneyIncrementIntervalMinutes / 60f;
+            double hoursSinceLastIncrement = _moneyIncrementIntervalMinutes / 60f;
             kingdom.Money += hoursSinceLastIncrement * _config.HourOfPlayTimeToMoneyRate * numMembersOnline;
         }
         _dal.saveAllKingdomInfoAsync(_cache.Kingdoms);
@@ -67,5 +71,17 @@ public class TaskScheduler {
 
             _lastKingdomEntered.put(uuid, currentKingdomId);
         }
+    }
+
+    private void backupPluginData() {
+        long retentionMilliseconds = _config.BackupRetentionDays * (long)86400000;
+        long maxRetentionEpochMilli = Instant.now().toEpochMilli() - retentionMilliseconds;
+        for (var backupName : _dal.getBackupNames()) {
+            long backupDateEpochMilli = Long.parseLong(backupName);
+            if (backupDateEpochMilli < maxRetentionEpochMilli) {
+                _dal.deleteBackup(backupName);
+            }
+        }
+        _dal.backupData();
     }
 }

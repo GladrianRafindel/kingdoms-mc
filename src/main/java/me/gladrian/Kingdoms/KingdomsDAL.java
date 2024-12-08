@@ -6,10 +6,10 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.time.Instant;
+import java.util.*;
 import java.util.logging.Level;
+import org.apache.commons.io.FileUtils;
 
 import org.checkerframework.checker.units.qual.A;
 import org.json.*;
@@ -346,6 +346,78 @@ public class KingdomsDAL {
         finally {
             unlockFile(fullPath);
         }
+    }
+
+    /* Makes a backup of the currently saved data */
+    public void backupData() {
+        var backupFolderName = Long.toString(getCurrentTicks());
+        var backupDirPath = Paths.get(_dataDirPath, "backups", backupFolderName).toString();
+        var backupDir = new File(backupDirPath);
+
+        try {
+            backupDir.mkdirs();
+            copyDirectory(_dataDirPath, backupDirPath, "members");
+            copyDirectory(_dataDirPath, backupDirPath, "chunks");
+            copyFile(_dataDirPath, backupDirPath, "kingdoms.json");
+            copyFile(_dataDirPath, backupDirPath, "messages.json");
+            copyFile(_dataDirPath, backupDirPath, "invitations.json");
+            copyFile(_dataDirPath, backupDirPath, "config.yml");
+        }
+        catch (Exception e) {
+            Bukkit.getLogger().log(Level.WARNING, "Failed to backup data to " + backupDirPath + " due to exception: " + e);
+            e.printStackTrace();
+        }
+    }
+
+    /* Deletes the specified backup directory */
+    public void deleteBackup(String backupFolderName) {
+        var backupDirPath = Paths.get(_dataDirPath, "backups", backupFolderName).toString();
+        var backupDir = new File(backupDirPath);
+
+        try {
+            backupDir.delete();
+        } catch (Exception e) {
+            Bukkit.getLogger().log(Level.WARNING, "Failed delete unretained backup " + backupDirPath + " due to exception: " + e);
+            e.printStackTrace();
+        }
+    }
+
+    /* Returns the folder names of all existing backups */
+    public ArrayList<String> getBackupNames() {
+        var backupRootDir = new File(Paths.get(_dataDirPath, "backups").toString());
+        var directoryNames = new ArrayList<String>();
+        for (var file : backupRootDir.listFiles()) {
+            if (file.isDirectory()) {
+                directoryNames.add(file.getName());
+            }
+        }
+        return directoryNames;
+    }
+
+    private void copyDirectory(String sourceRootDir, String destRootDir, String directoryName) {
+        File source = new File(Paths.get(sourceRootDir, directoryName).toString());
+        File destination = new File(Paths.get(destRootDir, directoryName).toString());
+        try {
+            FileUtils.copyDirectory(source, destination);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    private void copyFile(String sourceRootDir, String destRootDir, String fileName) {
+        File source = new File(Paths.get(sourceRootDir, fileName).toString());
+        File destination = new File(Paths.get(destRootDir, fileName).toString());
+        try {
+            FileUtils.copyFile(source, destination);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+    }
+
+    private long getCurrentTicks() {
+        return Instant.now().toEpochMilli();
     }
     //endregion
 }
