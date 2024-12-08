@@ -1,0 +1,8 @@
+name: Kingdoms
+version: 1.0.0
+main: me.gladrian.Kingdoms.Main
+api-version: 1.21
+commands:
+  k:
+    description: Main command for Kingdoms
+    usage: /k [help | create | claim | unclaim | set | tp | deposit | list | invite | uninvite | invited | remove | invitations | accept | reject | leave | delete | messages]
