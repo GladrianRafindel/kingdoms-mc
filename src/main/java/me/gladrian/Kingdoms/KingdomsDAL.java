@@ -386,9 +386,12 @@ public class KingdomsDAL {
     public ArrayList<String> getBackupNames() {
         var backupRootDir = new File(Paths.get(_dataDirPath, "backups").toString());
         var directoryNames = new ArrayList<String>();
-        for (var file : backupRootDir.listFiles()) {
-            if (file.isDirectory()) {
-                directoryNames.add(file.getName());
+        var directories = backupRootDir.listFiles();
+        if (directories != null) {
+            for (var file : directories) {
+                if (file.isDirectory()) {
+                    directoryNames.add(file.getName());
+                }
             }
         }
         return directoryNames;

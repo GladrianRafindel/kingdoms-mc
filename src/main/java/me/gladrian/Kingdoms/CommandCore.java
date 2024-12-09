@@ -57,6 +57,7 @@ public class CommandCore implements CommandExecutor {
             case "leave": leaveKingdom(player, args); break;
             case "delete": deleteKingdom(player, args); break;
             case "messages": viewMyMessages(player); break;
+            case "backup": adhocBackup(player); break;
 
             default:
                 player.sendMessage(ChatColor.RED + "No such Kingdoms command '" + subCommand + "'.");
@@ -821,6 +822,16 @@ public class CommandCore implements CommandExecutor {
             toPlayer.sendMessage("§eYou have a new message" +
                     (from == null ? "." : " from §f" + from.getDisplayName() + "§e.") +
                     " §eUse §6/k messages §eto read it.");
+        }
+    }
+
+    private void adhocBackup(Player player) {
+        if (!player.isOp()) {
+            player.sendMessage("§cYou do not have permission to perform this command.");
+        }
+        else {
+            _dal.backupData();
+            player.sendMessage("§eSuccessfully triggered backup of Kingdoms data.");
         }
     }
 
